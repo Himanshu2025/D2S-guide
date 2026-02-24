@@ -1,18 +1,32 @@
+"use client";
+
 import { DriverFilterBar } from "@/components/DriverFilterBar";
+import { EpisodeDetail } from "@/components/EpisodeDetail";
 import { EpisodeGrid } from "@/components/EpisodeGrid";
 import { FilterBar } from "@/components/FilterBar";
 import { SeasonTabs } from "@/components/SeasonTabs";
 import { TeamFilterBar } from "@/components/TeamFilterBar";
-import { DTSProvider } from "@/context/DTSContext";
+import { DTSProvider, useDTSContext } from "@/context/DTSContext";
 
-export default function HomePage() {
+export function HomePageContent() {
+  const { setSelectedEpisode } = useDTSContext();
+
   return (
-    <DTSProvider>
+    <>
       <SeasonTabs />
       <FilterBar />
       <DriverFilterBar />
       <TeamFilterBar />
-      <EpisodeGrid />
+      <EpisodeGrid setSelectedEpisode={setSelectedEpisode} />
+      <EpisodeDetail />
+    </>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <DTSProvider>
+      <HomePageContent />
     </DTSProvider>
   );
 }

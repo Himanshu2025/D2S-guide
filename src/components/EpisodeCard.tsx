@@ -18,16 +18,26 @@ function formatSlug(slug: string) {
 
 type EpisodeCardProps = {
   episode: Episode;
+  onClick?: () => void;
 };
 
-export function EpisodeCard({ episode }: EpisodeCardProps) {
+export function EpisodeCard({ episode, onClick }: EpisodeCardProps) {
   const featuredDrivers = episode.drivers.slice(0, 3);
 
   return (
     <motion.article
       whileHover={{ y: -6, scale: 1.01 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-lg"
+      onClick={onClick}
+      className="overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick?.();
+        }
+      }}
     >
       <div className="flex items-center justify-between border-b border-white/10 bg-zinc-950/60 px-4 py-3">
         <span className="rounded bg-zinc-800 px-2 py-1 text-xs font-semibold tracking-wide text-zinc-100">

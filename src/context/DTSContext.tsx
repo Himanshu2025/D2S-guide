@@ -9,31 +9,42 @@ import {
   useReducer,
 } from "react";
 
-import type { FilterState } from "@/types";
+import type { Episode, FilterState } from "@/types";
+
+type DTSState = {
+  filterState: FilterState;
+  selectedEpisode: Episode | null;
+};
 
 type DTSAction =
   | { type: "setSeason"; payload: FilterState["season"] }
+  | { type: "toggleTopRated" }
   | { type: "toggleDriver"; payload: string }
   | { type: "clearDrivers" }
   | { type: "toggleTeam"; payload: string }
   | { type: "setSearchQuery"; payload: string }
   | { type: "toggleSortByRating" }
-  | { type: "toggleWatched" };
+  | { type: "toggleWatched" }
+  | { type: "setSelectedEpisode"; payload: Episode | null };
 
 type DTSContextValue = {
   filterState: FilterState;
+  selectedEpisode: Episode | null;
   dispatch: Dispatch<DTSAction>;
   setSeason: (season: FilterState["season"]) => void;
+  toggleTopRated: () => void;
   toggleDriver: (driver: string) => void;
   clearDrivers: () => void;
   toggleTeam: (team: string) => void;
   setSearchQuery: (query: string) => void;
   toggleSortByRating: () => void;
   toggleWatched: () => void;
+  setSelectedEpisode: (episode: Episode | null) => void;
 };
 
 const initialFilterState: FilterState = {
   season: "all",
+  topRated: false,
   drivers: [],
   teams: [],
   races: [],
@@ -41,6 +52,11 @@ const initialFilterState: FilterState = {
   sortByRating: false,
   watchedOnly: false,
   highlightMode: false,
+};
+
+const initialState: DTSState = {
+  filterState: initialFilterState,
+  selectedEpisode: null,
 };
 
 const DTSContext = createContext<DTSContextValue | null>(null);
@@ -71,56 +87,93 @@ export function matchesDriverTeamFilters(
   return teamMatch;
 }
 
-function dtsReducer(state: FilterState, action: DTSAction): FilterState {
+function dtsReducer(state: DTSState, action: DTSAction): DTSState {
   switch (action.type) {
     case "setSeason": {
       return {
         ...state,
-        season: action.payload,
+        filterState: {
+          ...state.filterState,
+          season: action.payload,
+          topRated: false,
+        },
+      };
+    }
+    case "toggleTopRated": {
+      return {
+        ...state,
+        filterState: {
+          ...state.filterState,
+          topRated: !state.filterState.topRated,
+        },
       };
     }
     case "toggleDriver": {
-      const hasDriver = state.drivers.includes(action.payload);
+      const hasDriver = state.filterState.drivers.includes(action.payload);
 
       return {
         ...state,
-        drivers: hasDriver
-          ? state.drivers.filter((driver) => driver !== action.payload)
-          : [...state.drivers, action.payload],
+        filterState: {
+          ...state.filterState,
+          drivers: hasDriver
+            ? state.filterState.drivers.filter((driver) => driver !== action.payload)
+            : [...state.filterState.drivers, action.payload],
+        },
       };
     }
     case "clearDrivers": {
       return {
         ...state,
-        drivers: [],
+        filterState: {
+          ...state.filterState,
+          drivers: [],
+        },
       };
     }
     case "toggleTeam": {
-      const hasTeam = state.teams.includes(action.payload);
+      const hasTeam = state.filterState.teams.includes(action.payload);
 
       return {
         ...state,
-        teams: hasTeam
-          ? state.teams.filter((team) => team !== action.payload)
-          : [...state.teams, action.payload],
+        filterState: {
+          ...state.filterState,
+          teams: hasTeam
+            ? state.filterState.teams.filter((team) => team !== action.payload)
+            : [...state.filterState.teams, action.payload],
+        },
       };
     }
     case "setSearchQuery": {
       return {
         ...state,
-        searchQuery: action.payload,
+        filterState: {
+          ...state.filterState,
+          searchQuery: action.payload,
+        },
       };
     }
     case "toggleSortByRating": {
       return {
         ...state,
-        sortByRating: !state.sortByRating,
+        filterState: {
+          ...state.filterState,
+          sortByRating: !state.filterState.sortByRating,
+        },
       };
     }
     case "toggleWatched": {
       return {
         ...state,
-        watchedOnly: !state.watchedOnly,
+        filterState: {
+          ...state.filterState,
+          watchedOnly: !state.filterState.watchedOnly,
+        },
+      };
+    }
+    case "setSelectedEpisode": {
+      return {
+        ...state,
+        selectedEpisode: action.payload,
       };
     }
     default: {
@@ -130,21 +183,24 @@ function dtsReducer(state: FilterState, action: DTSAction): FilterState {
 }
 
 export function DTSProvider({ children }: { children: ReactNode }) {
-  const [filterState, dispatch] = useReducer(dtsReducer, initialFilterState);
+  const [state, dispatch] = useReducer(dtsReducer, initialState);
 
   const value = useMemo<DTSContextValue>(
     () => ({
-      filterState,
+      filterState: state.filterState,
+      selectedEpisode: state.selectedEpisode,
       dispatch,
       setSeason: (season) => dispatch({ type: "setSeason", payload: season }),
+      toggleTopRated: () => dispatch({ type: "toggleTopRated" }),
       toggleDriver: (driver) => dispatch({ type: "toggleDriver", payload: driver }),
       clearDrivers: () => dispatch({ type: "clearDrivers" }),
       toggleTeam: (team) => dispatch({ type: "toggleTeam", payload: team }),
       setSearchQuery: (query) => dispatch({ type: "setSearchQuery", payload: query }),
       toggleSortByRating: () => dispatch({ type: "toggleSortByRating" }),
       toggleWatched: () => dispatch({ type: "toggleWatched" }),
+      setSelectedEpisode: (episode) => dispatch({ type: "setSelectedEpisode", payload: episode }),
     }),
-    [filterState],
+    [state],
   );
 
   return <DTSContext.Provider value={value}>{children}</DTSContext.Provider>;

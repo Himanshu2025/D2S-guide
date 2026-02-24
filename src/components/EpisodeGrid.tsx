@@ -4,13 +4,24 @@ import { useMemo } from "react";
 
 import { episodes } from "@/data/episodes";
 import { matchesDriverTeamFilters, useDTSContext } from "@/context/DTSContext";
+import type { Episode } from "@/types";
 
 import { EpisodeCard } from "./EpisodeCard";
 
-export function EpisodeGrid() {
+type EpisodeGridProps = {
+  setSelectedEpisode: (episode: Episode | null) => void;
+};
+
+export function EpisodeGrid({ setSelectedEpisode }: EpisodeGridProps) {
   const { filterState } = useDTSContext();
 
   const filteredEpisodes = useMemo(() => {
+    if (filterState.topRated) {
+      return [...episodes].sort(
+        (leftEpisode, rightEpisode) => rightEpisode.imdbRating - leftEpisode.imdbRating,
+      );
+    }
+
     const query = filterState.searchQuery.trim().toLowerCase();
 
     const nextEpisodes = episodes.filter((episode) => {
@@ -31,7 +42,9 @@ export function EpisodeGrid() {
       return nextEpisodes;
     }
 
-    return [...nextEpisodes].sort((leftEpisode, rightEpisode) => rightEpisode.imdbRating - leftEpisode.imdbRating);
+    return [...nextEpisodes].sort(
+      (leftEpisode, rightEpisode) => rightEpisode.imdbRating - leftEpisode.imdbRating,
+    );
   }, [filterState]);
 
   const filteredCount = filteredEpisodes.length;
@@ -45,7 +58,11 @@ export function EpisodeGrid() {
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {filteredEpisodes.map((episode) => (
-          <EpisodeCard key={episode.id} episode={episode} />
+          <EpisodeCard
+            key={episode.id}
+            episode={episode}
+            onClick={() => setSelectedEpisode(episode)}
+          />
         ))}
       </section>
     </main>

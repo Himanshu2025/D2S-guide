@@ -29,6 +29,7 @@ export type Team = {
 
 export type FilterState = {
   season: number | "all";
+  topRated: boolean;
   drivers: string[];
   teams: string[];
   races: string[];
