@@ -3,9 +3,9 @@
 import { useMemo } from "react";
 
 import { episodes } from "@/data/episodes";
+import { matchesDriverTeamFilters, useDTSContext } from "@/context/DTSContext";
 
 import { EpisodeCard } from "./EpisodeCard";
-import { useDTSContext } from "@/context/DTSContext";
 
 export function EpisodeGrid() {
   const { filterState } = useDTSContext();
@@ -16,18 +16,15 @@ export function EpisodeGrid() {
     const nextEpisodes = episodes.filter((episode) => {
       const seasonMatch =
         filterState.season === "all" || episode.season === filterState.season;
-
-      const driverMatch =
-        filterState.drivers.length === 0 ||
-        filterState.drivers.every((driver) => episode.drivers.includes(driver));
-
-      const teamMatch =
-        filterState.teams.length === 0 ||
-        filterState.teams.every((team) => episode.teams.includes(team));
+      const participantMatch = matchesDriverTeamFilters(
+        episode.drivers,
+        episode.teams,
+        filterState,
+      );
 
       const searchMatch = query.length === 0 || episode.title.toLowerCase().includes(query);
 
-      return seasonMatch && driverMatch && teamMatch && searchMatch;
+      return seasonMatch && participantMatch && searchMatch;
     });
 
     if (!filterState.sortByRating) {

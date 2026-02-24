@@ -14,6 +14,7 @@ import type { FilterState } from "@/types";
 type DTSAction =
   | { type: "setSeason"; payload: FilterState["season"] }
   | { type: "toggleDriver"; payload: string }
+  | { type: "clearDrivers" }
   | { type: "toggleTeam"; payload: string }
   | { type: "setSearchQuery"; payload: string }
   | { type: "toggleSortByRating" }
@@ -24,6 +25,7 @@ type DTSContextValue = {
   dispatch: Dispatch<DTSAction>;
   setSeason: (season: FilterState["season"]) => void;
   toggleDriver: (driver: string) => void;
+  clearDrivers: () => void;
   toggleTeam: (team: string) => void;
   setSearchQuery: (query: string) => void;
   toggleSortByRating: () => void;
@@ -43,6 +45,32 @@ const initialFilterState: FilterState = {
 
 const DTSContext = createContext<DTSContextValue | null>(null);
 
+export function matchesDriverTeamFilters(
+  episodeDrivers: string[],
+  episodeTeams: string[],
+  filterState: FilterState,
+) {
+  const hasDriverFilters = filterState.drivers.length > 0;
+  const hasTeamFilters = filterState.teams.length > 0;
+
+  if (!hasDriverFilters && !hasTeamFilters) {
+    return true;
+  }
+
+  const driverMatch = episodeDrivers.some((driver) => filterState.drivers.includes(driver));
+  const teamMatch = episodeTeams.some((team) => filterState.teams.includes(team));
+
+  if (hasDriverFilters && hasTeamFilters) {
+    return driverMatch || teamMatch;
+  }
+
+  if (hasDriverFilters) {
+    return driverMatch;
+  }
+
+  return teamMatch;
+}
+
 function dtsReducer(state: FilterState, action: DTSAction): FilterState {
   switch (action.type) {
     case "setSeason": {
@@ -59,6 +87,12 @@ function dtsReducer(state: FilterState, action: DTSAction): FilterState {
         drivers: hasDriver
           ? state.drivers.filter((driver) => driver !== action.payload)
           : [...state.drivers, action.payload],
+      };
+    }
+    case "clearDrivers": {
+      return {
+        ...state,
+        drivers: [],
       };
     }
     case "toggleTeam": {
@@ -104,6 +138,7 @@ export function DTSProvider({ children }: { children: ReactNode }) {
       dispatch,
       setSeason: (season) => dispatch({ type: "setSeason", payload: season }),
       toggleDriver: (driver) => dispatch({ type: "toggleDriver", payload: driver }),
+      clearDrivers: () => dispatch({ type: "clearDrivers" }),
       toggleTeam: (team) => dispatch({ type: "toggleTeam", payload: team }),
       setSearchQuery: (query) => dispatch({ type: "setSearchQuery", payload: query }),
       toggleSortByRating: () => dispatch({ type: "toggleSortByRating" }),
