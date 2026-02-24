@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 
 import { drivers } from "@/data/drivers";
+import { useDTSContext } from "@/context/DTSContext";
 import { cn } from "@/lib/utils";
 import type { Episode } from "@/types";
 
@@ -22,7 +23,9 @@ type EpisodeCardProps = {
 };
 
 export function EpisodeCard({ episode, onClick }: EpisodeCardProps) {
+  const { watchedEpisodes } = useDTSContext();
   const featuredDrivers = episode.drivers.slice(0, 3);
+  const isWatched = watchedEpisodes.includes(episode.id);
 
   return (
     <motion.article
@@ -39,7 +42,12 @@ export function EpisodeCard({ episode, onClick }: EpisodeCardProps) {
         }
       }}
     >
-      <div className="flex items-center justify-between border-b border-white/10 bg-zinc-950/60 px-4 py-3">
+      <div className="relative flex items-center justify-between border-b border-white/10 bg-zinc-950/60 px-4 py-3">
+        {isWatched ? (
+          <span className="absolute top-2 left-2 rounded bg-emerald-500/20 px-1.5 py-0.5 text-xs font-semibold text-emerald-300">
+            ✓
+          </span>
+        ) : null}
         <span className="rounded bg-zinc-800 px-2 py-1 text-xs font-semibold tracking-wide text-zinc-100">
           S{String(episode.season).padStart(2, "0")} · E{String(episode.episode).padStart(2, "0")}
         </span>

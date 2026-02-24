@@ -13,7 +13,7 @@ type EpisodeGridProps = {
 };
 
 export function EpisodeGrid({ setSelectedEpisode }: EpisodeGridProps) {
-  const { filterState } = useDTSContext();
+  const { filterState, watchedEpisodes } = useDTSContext();
 
   const filteredEpisodes = useMemo(() => {
     if (filterState.topRated) {
@@ -34,8 +34,9 @@ export function EpisodeGrid({ setSelectedEpisode }: EpisodeGridProps) {
       );
 
       const searchMatch = query.length === 0 || episode.title.toLowerCase().includes(query);
+      const watchedMatch = !filterState.watchedOnly || watchedEpisodes.includes(episode.id);
 
-      return seasonMatch && participantMatch && searchMatch;
+      return seasonMatch && participantMatch && searchMatch && watchedMatch;
     });
 
     if (!filterState.sortByRating) {
@@ -45,7 +46,7 @@ export function EpisodeGrid({ setSelectedEpisode }: EpisodeGridProps) {
     return [...nextEpisodes].sort(
       (leftEpisode, rightEpisode) => rightEpisode.imdbRating - leftEpisode.imdbRating,
     );
-  }, [filterState]);
+  }, [filterState, watchedEpisodes]);
 
   const filteredCount = filteredEpisodes.length;
 
@@ -57,13 +58,19 @@ export function EpisodeGrid({ setSelectedEpisode }: EpisodeGridProps) {
       </div>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {filteredEpisodes.map((episode) => (
-          <EpisodeCard
-            key={episode.id}
-            episode={episode}
-            onClick={() => setSelectedEpisode(episode)}
-          />
-        ))}
+        {filteredEpisodes.length === 0 ? (
+          <div className="col-span-full py-16 text-center text-sm text-zinc-400">
+            No episodes found. Try adjusting your filters.
+          </div>
+        ) : (
+          filteredEpisodes.map((episode) => (
+            <EpisodeCard
+              key={episode.id}
+              episode={episode}
+              onClick={() => setSelectedEpisode(episode)}
+            />
+          ))
+        )}
       </section>
     </main>
   );

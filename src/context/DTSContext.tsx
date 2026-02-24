@@ -13,6 +13,7 @@ import type { Episode, FilterState } from "@/types";
 
 type DTSState = {
   filterState: FilterState;
+  watchedEpisodes: string[];
   selectedEpisode: Episode | null;
 };
 
@@ -25,10 +26,12 @@ type DTSAction =
   | { type: "setSearchQuery"; payload: string }
   | { type: "toggleSortByRating" }
   | { type: "toggleWatched" }
+  | { type: "toggleEpisodeWatched"; payload: string }
   | { type: "setSelectedEpisode"; payload: Episode | null };
 
 type DTSContextValue = {
   filterState: FilterState;
+  watchedEpisodes: string[];
   selectedEpisode: Episode | null;
   dispatch: Dispatch<DTSAction>;
   setSeason: (season: FilterState["season"]) => void;
@@ -39,6 +42,7 @@ type DTSContextValue = {
   setSearchQuery: (query: string) => void;
   toggleSortByRating: () => void;
   toggleWatched: () => void;
+  toggleEpisodeWatched: (episodeId: string) => void;
   setSelectedEpisode: (episode: Episode | null) => void;
 };
 
@@ -56,6 +60,7 @@ const initialFilterState: FilterState = {
 
 const initialState: DTSState = {
   filterState: initialFilterState,
+  watchedEpisodes: [],
   selectedEpisode: null,
 };
 
@@ -170,6 +175,16 @@ function dtsReducer(state: DTSState, action: DTSAction): DTSState {
         },
       };
     }
+    case "toggleEpisodeWatched": {
+      const isWatched = state.watchedEpisodes.includes(action.payload);
+
+      return {
+        ...state,
+        watchedEpisodes: isWatched
+          ? state.watchedEpisodes.filter((episodeId) => episodeId !== action.payload)
+          : [...state.watchedEpisodes, action.payload],
+      };
+    }
     case "setSelectedEpisode": {
       return {
         ...state,
@@ -188,6 +203,7 @@ export function DTSProvider({ children }: { children: ReactNode }) {
   const value = useMemo<DTSContextValue>(
     () => ({
       filterState: state.filterState,
+      watchedEpisodes: state.watchedEpisodes,
       selectedEpisode: state.selectedEpisode,
       dispatch,
       setSeason: (season) => dispatch({ type: "setSeason", payload: season }),
@@ -198,6 +214,7 @@ export function DTSProvider({ children }: { children: ReactNode }) {
       setSearchQuery: (query) => dispatch({ type: "setSearchQuery", payload: query }),
       toggleSortByRating: () => dispatch({ type: "toggleSortByRating" }),
       toggleWatched: () => dispatch({ type: "toggleWatched" }),
+      toggleEpisodeWatched: (episodeId) => dispatch({ type: "toggleEpisodeWatched", payload: episodeId }),
       setSelectedEpisode: (episode) => dispatch({ type: "setSelectedEpisode", payload: episode }),
     }),
     [state],

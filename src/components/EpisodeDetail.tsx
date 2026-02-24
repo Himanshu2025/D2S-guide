@@ -1,16 +1,43 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 import { AnimatePresence, motion } from "framer-motion";
 import { Star, X } from "lucide-react";
+import Image from "next/image";
 
-import { drivers } from "@/data/drivers";
-import { teams } from "@/data/teams";
+import { driverPhotos, drivers } from "@/data/drivers";
+import { teamLogos, teams } from "@/data/teams";
 import { cn } from "@/lib/utils";
 
 import { useDTSContext } from "@/context/DTSContext";
 
 const driverNameBySlug = new Map(drivers.map((driver) => [driver.slug, driver.name]));
 const teamNameBySlug = new Map(teams.map((team) => [team.slug, team.name]));
+
+const driverPhotoNameAliases: Record<string, string> = {
+  "Carlos Sainz Jr.": "Carlos Sainz",
+  "Nico Hülkenberg": "Nico Hulkenberg",
+  "Sergio Pérez": "Sergio Perez",
+};
+
+const teamFallbackDotClass: Record<string, string> = {
+  ferrari: "bg-red-500",
+  mercedes: "bg-cyan-400",
+  "red-bull": "bg-indigo-500",
+  mclaren: "bg-orange-500",
+  alpine: "bg-blue-500",
+  "aston-martin": "bg-emerald-500",
+  williams: "bg-sky-500",
+  haas: "bg-zinc-300",
+  "alfa-romeo": "bg-red-700",
+  "alpha-tauri": "bg-blue-300",
+  renault: "bg-yellow-400",
+  sauber: "bg-emerald-600",
+  "force-india": "bg-pink-500",
+  "racing-point": "bg-pink-400",
+  "toro-rosso": "bg-blue-600",
+};
 
 function formatSlug(slug: string) {
   return slug
@@ -20,8 +47,87 @@ function formatSlug(slug: string) {
     .join(" ");
 }
 
+function toReliableFormulaOneImageUrl(url: string) {
+  if (!url.includes("formula1.com/")) {
+    return url;
+  }
+
+  if (url.includes("media.formula1.com/")) {
+    return url;
+  }
+
+  const protocolSplit = url.split("//");
+  const pathWithDomain = protocolSplit[1] ?? protocolSplit[0];
+  const firstSlashIndex = pathWithDomain.indexOf("/");
+
+  if (firstSlashIndex === -1) {
+    return url;
+  }
+
+  const path = pathWithDomain.slice(firstSlashIndex + 1);
+
+  return `https://media.formula1.com/d_driver_fallback_image.png/${path}.transform/1col/image.png`;
+}
+
+function getDriverPhotoUrl(driverName: string) {
+  const normalizedName = driverPhotoNameAliases[driverName] ?? driverName;
+  const photoUrl = driverPhotos[normalizedName];
+
+  if (!photoUrl) {
+    return undefined;
+  }
+
+  return toReliableFormulaOneImageUrl(photoUrl);
+}
+
+function getDriverInitials(driverName: string) {
+  return driverName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+}
+
+type DriverAvatarProps = {
+  driverName: string;
+  driverPhotoUrl?: string;
+};
+
+function DriverAvatar({ driverName, driverPhotoUrl }: DriverAvatarProps) {
+  const [failed, setFailed] = useState(false);
+  const initials = useMemo(() => getDriverInitials(driverName), [driverName]);
+
+  if (!driverPhotoUrl || failed) {
+    return (
+      <span
+        className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-zinc-700 text-[10px] font-semibold text-zinc-200"
+        aria-hidden="true"
+      >
+        {initials}
+      </span>
+    );
+  }
+
+  return (
+    <Image
+      src={driverPhotoUrl}
+      alt={driverName}
+      width={24}
+      height={24}
+      unoptimized
+      onError={() => setFailed(true)}
+      className="h-6 w-6 rounded-full object-cover"
+    />
+  );
+}
+
 export function EpisodeDetail() {
-  const { selectedEpisode, setSelectedEpisode, toggleWatched, filterState } = useDTSContext();
+  const { selectedEpisode, setSelectedEpisode, watchedEpisodes, toggleEpisodeWatched } = useDTSContext();
+
+  const isSelectedEpisodeWatched = selectedEpisode
+    ? watchedEpisodes.includes(selectedEpisode.id)
+    : false;
 
   return (
     <AnimatePresence>
@@ -75,28 +181,57 @@ export function EpisodeDetail() {
                 Featured Drivers
               </h3>
               <div className="flex flex-wrap gap-2">
-                {selectedEpisode.drivers.map((driverSlug) => (
-                  <span
-                    key={driverSlug}
-                    className="rounded-full border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-200"
-                  >
-                    {driverNameBySlug.get(driverSlug) ?? formatSlug(driverSlug)}
-                  </span>
-                ))}
+                {selectedEpisode.drivers.map((driverSlug) => {
+                  const driverName = driverNameBySlug.get(driverSlug) ?? formatSlug(driverSlug);
+                  const driverPhotoUrl = getDriverPhotoUrl(driverName);
+
+                  return (
+                    <span
+                      key={driverSlug}
+                      className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-200"
+                    >
+                      <DriverAvatar driverName={driverName} driverPhotoUrl={driverPhotoUrl} />
+                      <span>{driverName}</span>
+                    </span>
+                  );
+                })}
               </div>
             </section>
 
             <section className="mb-6">
               <h3 className="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase">Teams</h3>
               <div className="flex flex-wrap gap-2">
-                {selectedEpisode.teams.map((teamSlug) => (
-                  <span
-                    key={teamSlug}
-                    className="rounded-full border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-200"
-                  >
-                    {teamNameBySlug.get(teamSlug) ?? formatSlug(teamSlug)}
-                  </span>
-                ))}
+                {selectedEpisode.teams.map((teamSlug) => {
+                  const teamName = teamNameBySlug.get(teamSlug) ?? formatSlug(teamSlug);
+                  const teamLogoUrl = teamLogos[teamSlug];
+
+                  return (
+                    <span
+                      key={teamSlug}
+                      className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-200"
+                    >
+                      {teamLogoUrl ? (
+                        <Image
+                          src={teamLogoUrl}
+                          alt={teamName}
+                          width={48}
+                          height={20}
+                          unoptimized
+                          className="h-5 w-auto object-contain"
+                        />
+                      ) : (
+                        <span
+                          className={cn(
+                            "h-2.5 w-2.5 rounded-full",
+                            teamFallbackDotClass[teamSlug] ?? "bg-zinc-500",
+                          )}
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span>{teamName}</span>
+                    </span>
+                  );
+                })}
               </div>
             </section>
 
@@ -115,15 +250,19 @@ export function EpisodeDetail() {
 
             <button
               type="button"
-              onClick={toggleWatched}
+              onClick={() => {
+                if (selectedEpisode) {
+                  toggleEpisodeWatched(selectedEpisode.id);
+                }
+              }}
               className={cn(
                 "w-full rounded-md border px-4 py-2 text-sm font-semibold transition-colors",
-                filterState.watchedOnly
-                  ? "border-red-500 bg-red-500/15 text-red-300"
+                isSelectedEpisodeWatched
+                  ? "border-emerald-500 bg-emerald-500/15 text-emerald-300"
                   : "border-zinc-700 bg-zinc-900 text-zinc-200 hover:border-zinc-500",
               )}
             >
-              {filterState.watchedOnly ? "Watched" : "Mark as Watched"}
+              {isSelectedEpisodeWatched ? "Watched" : "Mark as Watched"}
             </button>
           </motion.aside>
         </>

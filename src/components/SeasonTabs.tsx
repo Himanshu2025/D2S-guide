@@ -1,10 +1,15 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { episodes } from "@/data/episodes";
 
 import { useDTSContext } from "@/context/DTSContext";
 
 const seasonOptions: number[] = [1, 2, 3, 4, 5, 6, 7, 8];
+const episodeCountBySeason = seasonOptions.reduce<Record<number, number>>((accumulator, season) => {
+  accumulator[season] = episodes.filter((episode) => episode.season === season).length;
+  return accumulator;
+}, {});
 
 export function SeasonTabs() {
   const { filterState, setSeason, toggleTopRated } = useDTSContext();
@@ -70,6 +75,7 @@ export function SeasonTabs() {
               )}
             >
               {label}
+              <span className="ml-1 text-xs text-zinc-500">({episodeCountBySeason[season]})</span>
               <span
                 className={cn(
                   "absolute inset-x-0 bottom-0 h-0.5 transition-opacity",
