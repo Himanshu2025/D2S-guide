@@ -13,7 +13,7 @@ export function TeamFilterBar() {
       <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
         <h2 className="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase">Teams</h2>
 
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
           {teams.map((team) => {
             const isSelected = filterState.teams.includes(team.slug);
 

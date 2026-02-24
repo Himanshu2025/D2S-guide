@@ -25,7 +25,7 @@ export function DriverFilterBar() {
           )}
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
           {drivers.map((driver) => {
             const isSelected = filterState.drivers.includes(driver.slug);
 
