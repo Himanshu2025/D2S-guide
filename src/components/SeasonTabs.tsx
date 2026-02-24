@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { useDTSContext } from "@/context/DTSContext";
 
-const seasonOptions: Array<number | "all"> = ["all", 1, 2, 3, 4, 5, 6];
+const seasonOptions: Array<number | "all"> = ["all", 1, 2, 3, 4, 5, 6, 7, 8];
 
 export function SeasonTabs() {
   const { filterState, setSeason } = useDTSContext();
