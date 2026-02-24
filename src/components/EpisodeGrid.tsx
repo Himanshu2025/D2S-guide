@@ -11,7 +11,9 @@ export function EpisodeGrid() {
   const { filterState } = useDTSContext();
 
   const filteredEpisodes = useMemo(() => {
-    return episodes.filter((episode) => {
+    const query = filterState.searchQuery.trim().toLowerCase();
+
+    const nextEpisodes = episodes.filter((episode) => {
       const seasonMatch =
         filterState.season === "all" || episode.season === filterState.season;
 
@@ -23,19 +25,25 @@ export function EpisodeGrid() {
         filterState.teams.length === 0 ||
         filterState.teams.every((team) => episode.teams.includes(team));
 
-      if (!seasonMatch || !driverMatch || !teamMatch) {
-        return false;
-      }
+      const searchMatch = query.length === 0 || episode.title.toLowerCase().includes(query);
 
-      return true;
+      return seasonMatch && driverMatch && teamMatch && searchMatch;
     });
+
+    if (!filterState.sortByRating) {
+      return nextEpisodes;
+    }
+
+    return [...nextEpisodes].sort((leftEpisode, rightEpisode) => rightEpisode.imdbRating - leftEpisode.imdbRating);
   }, [filterState]);
+
+  const filteredCount = filteredEpisodes.length;
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">Drive to Survive</h1>
-        <p className="text-sm text-zinc-400">{filteredEpisodes.length} episodes</p>
+        <p className="text-sm text-zinc-400">{filteredCount} episodes</p>
       </div>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

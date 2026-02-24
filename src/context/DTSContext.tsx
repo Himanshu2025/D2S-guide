@@ -15,6 +15,8 @@ type DTSAction =
   | { type: "setSeason"; payload: FilterState["season"] }
   | { type: "toggleDriver"; payload: string }
   | { type: "toggleTeam"; payload: string }
+  | { type: "setSearchQuery"; payload: string }
+  | { type: "toggleSortByRating" }
   | { type: "toggleWatched" };
 
 type DTSContextValue = {
@@ -23,6 +25,8 @@ type DTSContextValue = {
   setSeason: (season: FilterState["season"]) => void;
   toggleDriver: (driver: string) => void;
   toggleTeam: (team: string) => void;
+  setSearchQuery: (query: string) => void;
+  toggleSortByRating: () => void;
   toggleWatched: () => void;
 };
 
@@ -31,6 +35,8 @@ const initialFilterState: FilterState = {
   drivers: [],
   teams: [],
   races: [],
+  searchQuery: "",
+  sortByRating: false,
   watchedOnly: false,
   highlightMode: false,
 };
@@ -65,6 +71,18 @@ function dtsReducer(state: FilterState, action: DTSAction): FilterState {
           : [...state.teams, action.payload],
       };
     }
+    case "setSearchQuery": {
+      return {
+        ...state,
+        searchQuery: action.payload,
+      };
+    }
+    case "toggleSortByRating": {
+      return {
+        ...state,
+        sortByRating: !state.sortByRating,
+      };
+    }
     case "toggleWatched": {
       return {
         ...state,
@@ -87,6 +105,8 @@ export function DTSProvider({ children }: { children: ReactNode }) {
       setSeason: (season) => dispatch({ type: "setSeason", payload: season }),
       toggleDriver: (driver) => dispatch({ type: "toggleDriver", payload: driver }),
       toggleTeam: (team) => dispatch({ type: "toggleTeam", payload: team }),
+      setSearchQuery: (query) => dispatch({ type: "setSearchQuery", payload: query }),
+      toggleSortByRating: () => dispatch({ type: "toggleSortByRating" }),
       toggleWatched: () => dispatch({ type: "toggleWatched" }),
     }),
     [filterState],

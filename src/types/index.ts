@@ -32,6 +32,8 @@ export type FilterState = {
   drivers: string[];
   teams: string[];
   races: string[];
+  searchQuery: string;
+  sortByRating: boolean;
   watchedOnly: boolean;
   highlightMode: boolean;
 };
